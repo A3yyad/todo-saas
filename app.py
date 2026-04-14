@@ -11,14 +11,25 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    tasks = Task.query.order_by(Task.created_at.desc()).all()
-    return render_template('index.html', tasks=tasks)
+    q = request.args.get('q', '').strip()
+    if q:
+        tasks = Task.query.filter(
+            Task.title.ilike(f'%{q}%') | Task.description.ilike(f'%{q}%')
+        ).order_by(Task.created_at.desc()).all()
+    else:
+        tasks = Task.query.order_by(Task.created_at.desc()).all()
+    return render_template('index.html', tasks=tasks, q=q)
 
 @app.route('/add', methods=['POST'])
 def add():
+    from datetime import datetime
     title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    priority = request.form.get('priority', 'medium')
+    due_date_str = request.form.get('due_date', '')
+    due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
     if title:
-        task = Task(title=title)
+        task = Task(title=title, description=description, priority=priority, due_date=due_date)
         db.session.add(task)
         db.session.commit()
     return redirect(url_for('index'))
