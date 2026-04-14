@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, Task
-from datetime import datetime, date
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'
@@ -13,34 +12,17 @@ with app.app_context():
 @app.route('/')
 def index():
     q = request.args.get('q', '').strip()
-    status_filter = request.args.get('status', '')
-    priority_filter = request.args.get('priority', '')
-    sort_by = request.args.get('sort', 'created_desc')
-
-    query = Task.query
-
     if q:
-        query = query.filter(Task.title.ilike(f'%{q}%') | Task.description.ilike(f'%{q}%'))
-    if status_filter:
-        query = query.filter(Task.status == status_filter)
-    if priority_filter:
-        query = query.filter(Task.priority == priority_filter)
-    if sort_by == 'due_date':
-        query = query.order_by(Task.due_date.asc())
-    elif sort_by == 'priority':
-        query = query.order_by(Task.priority.asc())
-    elif sort_by == 'created_asc':
-        query = query.order_by(Task.created_at.asc())
+        tasks = Task.query.filter(
+            Task.title.ilike(f'%{q}%') | Task.description.ilike(f'%{q}%')
+        ).order_by(Task.created_at.desc()).all()
     else:
-        query = query.order_by(Task.created_at.desc())
-
-    tasks = query.all()
-    today = date.today()
-    return render_template('index.html', tasks=tasks, q=q, status_filter=status_filter,
-                           priority_filter=priority_filter, sort_by=sort_by, today=today)
+        tasks = Task.query.order_by(Task.created_at.desc()).all()
+    return render_template('index.html', tasks=tasks, q=q)
 
 @app.route('/add', methods=['POST'])
 def add():
+    from datetime import datetime
     title = request.form.get('title', '').strip()
     description = request.form.get('description', '').strip()
     priority = request.form.get('priority', 'medium')

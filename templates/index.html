@@ -10,17 +10,13 @@
     .form-grid input, .form-grid select, .form-grid textarea { padding: 8px; border: 1px solid #ccc; border-radius: 6px; width: 100%; box-sizing: border-box; }
     .form-grid textarea { grid-column: span 2; }
     .form-grid button { grid-column: span 2; padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    .search-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .search-bar { display: flex; gap: 8px; margin-bottom: 24px; }
     .search-bar input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
     .search-bar button { padding: 8px 16px; background: #0f172a; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    .filters { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-    .filters select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
-    .filters a { padding: 8px 12px; background: #f1f5f9; border-radius: 6px; font-size: 0.85rem; color: #333; text-decoration: none; }
-    .result-info { font-size: 0.85rem; color: #666; margin-bottom: 12px; }
+    .search-result { font-size: 0.85rem; color: #666; margin-bottom: 12px; }
     ul { list-style: none; padding: 0; }
     li { padding: 12px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; }
     li.done .task-title { text-decoration: line-through; color: #aaa; }
-    li.overdue { border-left: 4px solid #e53e3e; }
     .task-title { font-weight: bold; }
     .task-meta { font-size: 0.8rem; color: #666; margin-top: 4px; }
     .task-desc { font-size: 0.9rem; color: #444; margin-top: 4px; }
@@ -48,46 +44,22 @@
       <button type="submit">Add Task</button>
     </div>
   </form>
-
   <form action="/" method="GET" class="search-bar">
     <input type="text" name="q" placeholder="Search tasks..." value="{{ q }}">
     <button type="submit">Search</button>
+    {% if q %}<a href="/">Clear</a>{% endif %}
   </form>
-
-  <form action="/" method="GET" class="filters">
-    <input type="hidden" name="q" value="{{ q }}">
-    <select name="status" onchange="this.form.submit()">
-      <option value="">All Status</option>
-      <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-      <option value="done" {% if status_filter == 'done' %}selected{% endif %}>Done</option>
-    </select>
-    <select name="priority" onchange="this.form.submit()">
-      <option value="">All Priorities</option>
-      <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
-      <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
-      <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
-    </select>
-    <select name="sort" onchange="this.form.submit()">
-      <option value="created_desc" {% if sort_by == 'created_desc' %}selected{% endif %}>Newest First</option>
-      <option value="created_asc" {% if sort_by == 'created_asc' %}selected{% endif %}>Oldest First</option>
-      <option value="due_date" {% if sort_by == 'due_date' %}selected{% endif %}>Sort by Due Date</option>
-      <option value="priority" {% if sort_by == 'priority' %}selected{% endif %}>Sort by Priority</option>
-    </select>
-    <a href="/">Clear Filters</a>
-  </form>
-
-  <div class="result-info">Showing {{ tasks|length }} task(s)</div>
-
+  {% if q %}
+  <div class="search-result">Search results for: <strong>{{ q }}</strong> — {{ tasks|length }} found</div>
+  {% endif %}
   <ul>
     {% for task in tasks %}
-    {% set overdue = task.due_date and task.due_date < today and task.status == 'pending' %}
-    <li class="{{ task.status }}{% if overdue %} overdue{% endif %}">
+    <li class="{{ task.status }}">
       <div style="display:flex; align-items:center; gap:10px;">
         <input type="checkbox" {% if task.status == 'done' %}checked{% endif %}
                onclick="location.href='/complete/{{ task.id }}'">
         <span class="task-title">{{ task.title }}</span>
         <span class="badge {{ task.priority }}">{{ task.priority }}</span>
-        {% if overdue %}<span class="badge high">overdue</span>{% endif %}
       </div>
       {% if task.description %}
       <div class="task-desc">{{ task.description }}</div>
