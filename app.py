@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, Task
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'
@@ -17,8 +18,12 @@ def index():
 @app.route('/add', methods=['POST'])
 def add():
     title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    priority = request.form.get('priority', 'medium')
+    due_date_str = request.form.get('due_date', '')
+    due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
     if title:
-        task = Task(title=title)
+        task = Task(title=title, description=description, priority=priority, due_date=due_date)
         db.session.add(task)
         db.session.commit()
     return redirect(url_for('index'))
